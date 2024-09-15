@@ -1,100 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red GPT 1.0</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        #chat-container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            border: 2px solid #000000;
-            background-color: #ffffff;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        #input-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        #user-input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #000000;
-            border-radius: 5px;
-        }
-        #send-button {
-            padding: 10px 20px;
-            background-color: #000000;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #send-button:hover {
-            background-color: #333333;
-        }
-    </style>
-</head>
-<body>
-    <div id="chat-container">
-        <div id="messages"></div>
-        <div id="input-container">
-            <input type="text" id="user-input" placeholder="Type your message here...">
-            <button id="send-button">Send</button>
-        </div>
-    </div>
-    <script>
-        document.getElementById('send-button').addEventListener('click', async () => {
-            const userInput = document.getElementById('user-input').value;
-            if (!userInput) return;
+from flask import Flask, request, jsonify
+import requests
 
-            const messages = document.getElementById('messages');
-            const userMessage = document.createElement('div');
-            userMessage.textContent = You: ${userInput};
-            userMessage.style.marginBottom = '10px';
-            messages.appendChild(userMessage);
-            document.getElementById('user-input').value = '';
+app = Flask(__name__)
 
-            // Замените этот URL на ваш серверный URL
-            const response = await fetch('http://localhost:5000/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ message: userInput })
-            });
+# Вставьте сюда URL и API-ключ для вашего AI
+AI_API_URL = 'https://api.your-ai-provider.com/v1/chat'
+API_KEY = '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'
 
-            if (response.ok) {
-                const data = await response.json();
-                const aiMessage = document.createElement('div');
-                aiMessage.textContent = AI: ${data.reply};
-                aiMessage.style.marginBottom = '10px';
-                messages.appendChild(aiMessage);
-                messages.scrollTop = messages.scrollHeight;
-            } else {
-                const errorMessage = document.createElement('div');
-                errorMessage.textContent = 'AI: Error receiving response';
-                errorMessage.style.marginBottom = '10px';
-                messages.appendChild(errorMessage);
-            }
-        });
-    </script>
-</body>
-</html>
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    data = request.json
+    user_message = data.get('message')
+
+    # Запрос к API вашего AI
+    response = requests.post(
+        AI_API_URL,
+        headers={'Authorization': f'Bearer {API_KEY}'},
+        json={'message': user_message}
+    )
+
+    # Возвращаем ответ
+    if response.status_code == 200:
+        ai_reply = response.json().get('reply')
+        return jsonify({'reply': ai_reply})
+    else:
+        return jsonify({'reply': 'Error: Could not reach AI'}), 500
+
+if name == '__main__':
+    app.run(debug=True)
